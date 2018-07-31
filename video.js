@@ -31,7 +31,7 @@ Bom = {
 function login(closeLocalMedia,ismaster) {
     isMaster = ismaster;
     sdkappid = Bom.query("sdkappid") || $("#sdkappid").val();
-    userId = $("#userId").val();
+    userId = (isMaster?"master_":"joiner_")+$("#userId").val();
     //请使用英文半角/数字作为用户名
     $.ajax({
         type: "POST",
@@ -133,9 +133,6 @@ function onLocalStreamAdd(info) {
             $("#mVideo").html(videoHtml);
             var video = document.querySelector("#"+id);
             video.srcObject = info.stream;
-            video.muted = true
-            video.autoplay = true
-            video.playsinline = true
         }else{
             for(var i=1;i<=4;i++){
                 console.log($("#sVideo"+i).html());
@@ -160,8 +157,28 @@ function onLocalStreamAdd(info) {
 
 function onRemoteStreamUpdate(info){
     console.log(info.userId + '连接');
-    console.log(info.videoId +":" + info.userId);
-    console.log("onRemoteStreamUpdate",info);
+
+    if(info.userId.indexOf("master")!=-1){
+        var id = 'master';
+        videoHtml = '<video id="' + id + '" autoplay playsinline ></video>';
+        $("#mVideo").html(videoHtml);
+        var video = document.querySelector("#"+id);
+        video.srcObject = info.stream;
+    }else{
+        for(var i=1;i<=4;i++){
+            if($("#sVideo"+i).html()==''){
+                var id = 'joiner'+i;
+                console.log('id:'+id);
+                videoHtml = '<video id="' + id + '" autoplay playsinline ></video>';
+                $("#sVideo"+i).html(videoHtml);
+                var video = document.querySelector("#"+id);
+                video.srcObject = info.stream;
+                break;
+            }else{
+                continue;
+            }
+        }
+    }
 }
 
 function onRemoteStreamRemove(info) {
