@@ -84,6 +84,18 @@ function initRTC(opts) {
             document.querySelector("#remoteVideo").srcObject = data.stream;
         }
     });
+    RTC.on("onErrorNotify", function (info) {
+        console.warn(info)
+    });
+    RTC.on("onStreamNotify", function (info) {
+        console.warn('onStreamNotify', info)
+    });
+    RTC.on("onWebSocketNotify", function (info) {
+        console.warn('onWebSocketNotify', info)
+    });
+    RTC.on("onUserDefinedWebRTCEventNotice", function (info) {
+        // console.error( 'onUserDefinedWebRTCEventNotice',info )
+    });
 
 }
 
