@@ -189,6 +189,10 @@ function onRemoteStreamUpdate(info){
 }
 
 function onRemoteStreamRemove(info) {
+    if($("#user"+info.userId).length>0){
+        $("#user"+info.userId).remove();
+    }
+
     console.log(info.userId + ' 断开了连接');
     console.log(info.videoId +":" + info.userId);
 }
