@@ -169,7 +169,7 @@ video {
 }
 @media (min-width: 800px) {
     video {
-        width: 50%!important;
+        width: 100%!important;
         height: auto!important;
     }
     svg {

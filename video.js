@@ -126,6 +126,9 @@ function initRTC(opts) {
 }
 
 function onLocalStreamAdd(info) {
+    if($("#user"+userId).length<=0){
+        $("#users").append("<li id='user"+userId+"'>"+userId+"</li>");
+    }
     if (info.stream && info.stream.active === true) {
         if(isMaster){
             var id = 'master';
@@ -135,10 +138,8 @@ function onLocalStreamAdd(info) {
             video.srcObject = info.stream;
         }else{
             for(var i=1;i<=4;i++){
-                console.log($("#sVideo"+i).html());
                 if($("#sVideo"+i).html()==''){
                     var id = 'joiner'+i;
-                    console.log('id:'+id);
                     videoHtml = '<video id="' + id + '" autoplay muted playsinline ></video>';
                     $("#sVideo"+i).html(videoHtml);
                     var video = document.querySelector("#"+id);
@@ -156,7 +157,10 @@ function onLocalStreamAdd(info) {
 }
 
 function onRemoteStreamUpdate(info){
-    console.log(info.userId + '连接');
+    var userId = info.userId;
+    if($("#user"+userId).length<=0){
+        $("#users").append("<li id='user"+userId+"'>"+userId+"</li>");
+    }
 
     if(info.userId.indexOf("master")!=-1){
         var id = 'master';
@@ -165,17 +169,20 @@ function onRemoteStreamUpdate(info){
         var video = document.querySelector("#"+id);
         video.srcObject = info.stream;
     }else{
-        for(var i=1;i<=4;i++){
-            if($("#sVideo"+i).html()==''){
-                var id = 'joiner'+i;
-                console.log('id:'+id);
-                videoHtml = '<video id="' + id + '" autoplay playsinline ></video>';
-                $("#sVideo"+i).html(videoHtml);
-                var video = document.querySelector("#"+id);
-                video.srcObject = info.stream;
-                break;
-            }else{
-                continue;
+        if($("."+info.videoId).length>0){
+            console.log(info.videoId+"已经存在")
+        }else{
+            for(var i=1;i<=4;i++){
+                if($("#sVideo"+i).html()==''){
+                    var id = 'joiner'+i;
+                    videoHtml = '<video id="' + id + '" class="'+info.videoId+'" autoplay playsinline ></video>';
+                    $("#sVideo"+i).html(videoHtml);
+                    var video = document.querySelector("#"+id);
+                    video.srcObject = info.stream;
+                    break;
+                }else{
+                    continue;
+                }
             }
         }
     }
