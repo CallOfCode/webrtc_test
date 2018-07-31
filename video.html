@@ -1,11 +1,55 @@
 <!DOCTYPE html>
 <html>
 <head>
+    <title>WEBRTC Demo</title>
     <meta charset="utf-8">
+    <meta content="width=device-width, initial-scale=1" name="viewport">
+    <link href='./css/bootstrap.css' rel="stylesheet" type="text/css">
+    <link href='./css/style.css' rel='stylesheet' type="text/css">
+    <link rel="stylesheet" href="../assets/css/pure-min.css" type="text/css">
+    <link rel="stylesheet" href="../assets/css/baby-blue.css" type="text/css">
 </head>
 <body>
-<video id="localVideo" muted autoplay playsinline></video>
-<video id="remoteVideo" autoplay playsinline></video>
+<!-- 登录  -->
+<div id="input-container" class="container">
+    <div class="login-box">
+        <div class="form-group">
+            <div class="hide">
+                <label for="sdkappid">SDKAPPID:&nbsp;</label>
+                <input class="form-control" id="sdkappid" type="text" value="1400037025" />
+            </div>
+            <label for="userId">用户名:</label>
+            <input class="form-control" id="userId" type="text" value="" />
+            <label for="room-number">房间号:</label>
+            <input class="form-control" id="roomid" type="text" value="120911">
+        </div>
+        <button class="btn btn-default" type="button" onclick="login(false,true)">创建房间</button>
+        <button class="btn btn-default" type="button" onclick="login(false,false)">加入房间</button>
+        <br />
+        <p>注意：如果房间已经存在，则加入房间</p>
+    </div>
+</div>
+<!-- RTC  -->
+<div id="video-section" style="display: none">
+    <div class="container" id="remote-video-wrap">
+        <div class="row">
+            <div class="span8" id="mVideo">
+            </div>
+            <div class="span4">
+                <div class="row">
+                    <div class="span6" id="sVideo1"></div>
+                    <div class="span6" id="sVideo2"></div>
+                </div>
+                <div class="row">
+                    <div class="span6" id="sVideo3"></div>
+                    <div class="span6" id="sVideo4"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</div>
+<!-- RTC  -->
 <!-- jquery Demo用到，WebRTCAPI不依赖 -->
 <script src="./assets/libs/jquery.min.js" type="text/javascript"></script>
 <script src="./assets/libs/vconsole.min.js" type="text/javascript"></script>

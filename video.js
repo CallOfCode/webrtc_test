@@ -1,13 +1,38 @@
 var FetchSigCgi = 'https://sxb.qcloud.com/sxb_dev/?svc=account&cmd=authPrivMap';
-var sdkappid = 1400037025,
-    userid = 10010,
-    roomid = 111911,
-    accountType = 14418,
-    closeLocalMedia = false,
+var sdkappid,
+    accountType = 14418, // accounttype 还是在文档中会找到
+    userId,
     userSig,
-    privateMapKey;
+    username,
+    isMaster = false;
 
-$(function () {
+
+$("#userId").val("video_" + parseInt(Math.random() * 100000000));
+
+Bom = {
+    /**
+     * @description 读取location.search
+     *
+     * @param {String} n 名称
+     * @return {String} search值
+     * @example
+     * 		$.bom.query('mod');
+     */
+    query: function (n) {
+        var m = window.location.search.match(new RegExp("(\\?|&)" + n + "=([^&]*)(&|$)"));
+        return !m ? "" : decodeURIComponent(m[2]);
+    },
+    getHash: function (n) {
+        var m = window.location.hash.match(new RegExp("(#|&)" + n + "=([^&]*)(&|$)"));
+        return !m ? "" : decodeURIComponent(m[2]);
+    }
+};
+
+function login(closeLocalMedia,ismaster) {
+    isMaster = ismaster;
+    sdkappid = Bom.query("sdkappid") || $("#sdkappid").val();
+    userId = $("#userId").val();
+    //请使用英文半角/数字作为用户名
     $.ajax({
         type: "POST",
         url: FetchSigCgi,
@@ -15,25 +40,28 @@ $(function () {
         data: JSON.stringify({
             pwd: "12345678",
             appid: parseInt(sdkappid),
-            roomnum: parseInt(roomid),
+            roomnum: parseInt($("#roomid").val()),
             privMap: 255,
-            identifier: userid,
+            identifier: userId,
             accounttype: accountType
         }),
         success: function (json) {
             if (json && json.errorCode === 0) {
                 //一会儿进入房间要用到
-                userSig = json.data.userSig;
-                privateMapKey = json.data.privMapEncrypt;
+                var userSig = json.data.userSig;
+                var privateMapKey = json.data.privMapEncrypt;
+                // 页面处理，显示视频流页面
+                $("#video-section").show();
+                $("#input-container").hide();
 
                 initRTC({
-                    "userId": userid,
+                    "userId": userId,
                     "userSig": userSig,
                     "privateMapKey": privateMapKey,
                     "sdkappid": sdkappid,
                     "accountType": accountType,
                     "closeLocalMedia": closeLocalMedia,
-                    "roomid": roomid
+                    "roomid": $("#roomid").val()
                 });
 
             } else {
@@ -43,14 +71,12 @@ $(function () {
         error: function (err) {
             console.error(err);
         }
-    });
-
-
-});
+    })
+}
 
 function initRTC(opts) {
-    // 初始化
     window.RTC = new WebRTCAPI({
+        useCloud: 1, //是否使用云上环境
         userId: opts.userId,
         userSig: opts.userSig,
         sdkAppId: opts.sdkappid,
@@ -71,20 +97,20 @@ function initRTC(opts) {
         console.warn("init error", error)
     });
 
-
-    //本地流 新增
-    RTC.on("onLocalStreamAdd", function(data){
-        if( data && data.stream){
-
-            document.querySelector("#localVideo").srcObject = data.stream;
-        }
-    });
-    //远端流 新增/更新
-    RTC.on("onRemoteStreamUpdate", function(data){
-        if( data && data.stream){
-            document.querySelector("#remoteVideo").srcObject = data.stream;
-        }
-    });
+    // 远端流新增/更新
+    RTC.on("onRemoteStreamUpdate", onRemoteStreamUpdate)
+    // 本地流新增
+    RTC.on("onLocalStreamAdd", onLocalStreamAdd)
+    // 远端流断开
+    RTC.on("onRemoteStreamRemove", onRemoteStreamRemove)
+    // 重复登录被T
+    RTC.on("onKickout", onKickout)
+    // 服务器超时
+    RTC.on("onRelayTimeout", onRelayTimeout)
+    // just for debugging
+    // RTC.on("*",function(e){
+    //     console.debug(e)
+    // });
     RTC.on("onErrorNotify", function (info) {
         console.warn(info)
     });
@@ -98,4 +124,59 @@ function initRTC(opts) {
         // console.error( 'onUserDefinedWebRTCEventNotice',info )
     });
 }
+
+function onLocalStreamAdd(info) {
+    if (info.stream && info.stream.active === true) {
+        if(isMaster){
+            var id = 'master';
+            videoHtml = '<video id="' + id + '" autoplay muted playsinline ></video>';
+            $("#mVideo").html(videoHtml);
+            var video = document.querySelector("#"+id);
+            video.srcObject = info.stream;
+            video.muted = true
+            video.autoplay = true
+            video.playsinline = true
+        }else{
+            for(var i=1;i<=4;i++){
+                console.log($("#sVideo"+i).html());
+                if($("#sVideo"+i).html()==''){
+                    var id = 'joiner'+i;
+                    console.log('id:'+id);
+                    videoHtml = '<video id="' + id + '" autoplay muted playsinline ></video>';
+                    $("#sVideo"+i).html(videoHtml);
+                    var video = document.querySelector("#"+id);
+                    video.srcObject = info.stream;
+                    video.muted = true
+                    video.autoplay = true
+                    video.playsinline = true
+                    break;
+                }else{
+                    continue;
+                }
+            }
+        }
+    }
+}
+
+function onRemoteStreamUpdate(info){
+    console.log(info.userId + '连接');
+    console.log(info.videoId +":" + info.userId);
+    console.log("onRemoteStreamUpdate",info);
+}
+
+function onRemoteStreamRemove(info) {
+    console.log(info.userId + ' 断开了连接');
+    console.log(info.videoId +":" + info.userId);
+}
+
+function onKickout() {
+    alert("on kick out!");
+}
+
+function onRelayTimeout(msg) {
+    alert("onRelayTimeout!" + (msg ? JSON.stringify(msg) : ""));
+}
+
+
+
 
