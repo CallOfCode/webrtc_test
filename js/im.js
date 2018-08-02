@@ -209,7 +209,7 @@ function showMsg(msg) {
     var index = Math.round(fromAccount.length % colorList.length);
     var color = colorList[index];
     nickNameSpan.setAttribute('class', 'user-name-' + color);
-    nickNameSpan.innerHTML = webim.Tool.formatText2Html("" + fromAccountNick + "");
+    nickNameSpan.innerHTML = webim.Tool.formatText2Html("" + fromAccountNick + ": ");
     contentSpan = document.createElement("span");
 
     //解析消息
@@ -399,7 +399,7 @@ function sendMsg() {
         //webim.C2C_MSG_SUB_TYPE.COMMON-普通消息,
         subType = webim.C2C_MSG_SUB_TYPE.COMMON;
     }
-    var msg = new webim.Msg(selSess, isSend, seq, random, msgTime, loginInfo.identifier, subType, loginInfo.identifierNick);
+    var msg = new webim.Msg(selSess, isSend, seq, random, msgTime, userId, subType, userId);
     //解析文本和表情
     var expr = /\[[^[\]]{1,3}\]/mg;
     var emotions = msgtosend.match(expr);
