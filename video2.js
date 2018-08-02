@@ -1,6 +1,6 @@
-var FetchSigCgi = 'https://sxb.qcloud.com/sxb_dev/?svc=account&cmd=authPrivMap';
+var FetchSigCgi = 'http://localhost:8989/tx/sig';
 var sdkappid,
-    accountType = 14418, // accounttype 还是在文档中会找到
+    accountType = 32646, // accounttype 还是在文档中会找到
     userId,
     userSig,
     username,
@@ -45,6 +45,7 @@ function login(closeLocalMedia,ismaster) {
             identifier: userId,
             accounttype: accountType
         }),
+        contentType:"application/json",
         success: function (json) {
             if (json && json.errorCode === 0) {
                 //一会儿进入房间要用到
