@@ -1,4 +1,9 @@
 var isAccessFormalEnv = true;//是否访问正式环境
+var selToID = null;//当前选中聊天id（当聊天类型为私聊时，该值为好友帐号，否则为群号）
+var selType = webim.SESSION_TYPE.GROUP;
+var selSess = null;//当前聊天会话
+//默认群组头像(选填)
+var selSessHeadUrl = '/img/2017.jpg';
 
 if (webim.Tool.getQueryString("isAccessFormalEnv") == "false") {
     isAccessFormalEnv = false;//访问测试环境
@@ -341,4 +346,100 @@ function applyJoinBigGroup(groupId) {
             alert(err.ErrorInfo);
         }
     );
+}
+
+//发送消息(普通消息)
+
+function sendMsg() {
+    if (!selToID) {
+        alert("您还没有进入房间，暂不能聊天");
+        $("#send_msg_text").val('');
+        return;
+    }
+    //获取消息内容
+    var msgtosend = $("#send_msg_text").val();
+    var msgLen = webim.Tool.getStrBytes(msgtosend);
+
+    if (msgtosend.length < 1) {
+        alert("发送的消息不能为空!");
+        return;
+    }
+
+    var maxLen, errInfo;
+    if (selType == webim.SESSION_TYPE.GROUP) {
+        maxLen = webim.MSG_MAX_LENGTH.GROUP;
+        errInfo = "消息长度超出限制(最多" + Math.round(maxLen / 3) + "汉字)";
+    } else {
+        maxLen = webim.MSG_MAX_LENGTH.C2C;
+        errInfo = "消息长度超出限制(最多" + Math.round(maxLen / 3) + "汉字)";
+    }
+    if (msgLen > maxLen) {
+        alert(errInfo);
+        return;
+    }
+
+    if (!selSess) {
+        selSess = new webim.Session(selType, selToID, selToID, selSessHeadUrl, Math.round(new Date().getTime() / 1000));
+    }
+    var isSend = true; //是否为自己发送
+    var seq = -1; //消息序列，-1表示sdk自动生成，用于去重
+    var random = Math.round(Math.random() * 4294967296); //消息随机数，用于去重
+    var msgTime = Math.round(new Date().getTime() / 1000); //消息时间戳
+    var subType; //消息子类型
+    if (selType == webim.SESSION_TYPE.GROUP) {
+        //群消息子类型如下：
+        //webim.GROUP_MSG_SUB_TYPE.COMMON-普通消息,
+        //webim.GROUP_MSG_SUB_TYPE.LOVEMSG-点赞消息，优先级最低
+        //webim.GROUP_MSG_SUB_TYPE.TIP-提示消息(不支持发送，用于区分群消息子类型)，
+        //webim.GROUP_MSG_SUB_TYPE.REDPACKET-红包消息，优先级最高
+        subType = webim.GROUP_MSG_SUB_TYPE.COMMON;
+
+    } else {
+        //C2C消息子类型如下：
+        //webim.C2C_MSG_SUB_TYPE.COMMON-普通消息,
+        subType = webim.C2C_MSG_SUB_TYPE.COMMON;
+    }
+    var msg = new webim.Msg(selSess, isSend, seq, random, msgTime, loginInfo.identifier, subType, loginInfo.identifierNick);
+    //解析文本和表情
+    var expr = /\[[^[\]]{1,3}\]/mg;
+    var emotions = msgtosend.match(expr);
+    var text_obj, face_obj, tmsg, emotionIndex, emotion, restMsgIndex;
+    if (!emotions || emotions.length < 1) {
+        text_obj = new webim.Msg.Elem.Text(msgtosend);
+        msg.addText(text_obj);
+    } else { //有表情
+
+        for (var i = 0; i < emotions.length; i++) {
+            tmsg = msgtosend.substring(0, msgtosend.indexOf(emotions[i]));
+            if (tmsg) {
+                text_obj = new webim.Msg.Elem.Text(tmsg);
+                msg.addText(text_obj);
+            }
+            emotionIndex = webim.EmotionDataIndexs[emotions[i]];
+            emotion = webim.Emotions[emotionIndex];
+            if (emotion) {
+                face_obj = new webim.Msg.Elem.Face(emotionIndex, emotions[i]);
+                msg.addFace(face_obj);
+            } else {
+                text_obj = new webim.Msg.Elem.Text(emotions[i]);
+                msg.addText(text_obj);
+            }
+            restMsgIndex = msgtosend.indexOf(emotions[i]) + emotions[i].length;
+            msgtosend = msgtosend.substring(restMsgIndex);
+        }
+        if (msgtosend) {
+            text_obj = new webim.Msg.Elem.Text(msgtosend);
+            msg.addText(text_obj);
+        }
+    }
+    webim.sendMsg(msg, function(resp) {
+        if (selType == webim.SESSION_TYPE.C2C) { //私聊时，在聊天窗口手动添加一条发的消息，群聊时，长轮询接口会返回自己发的消息
+            showMsg(msg);
+        }
+        webim.Log.info("发消息成功");
+        $("#send_msg_text").val('');
+    }, function(err) {
+        webim.Log.error("发消息失败:" + err.ErrorInfo);
+        alert("发消息失败:" + err.ErrorInfo);
+    });
 }

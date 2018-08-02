@@ -1,4 +1,4 @@
-var FetchSigCgi = 'http://localhost:8989/tx/sig';
+var FetchSigCgi = 'http://192.168.8.55:8989/tx/sig';
 var isMaster = false;
 
 
