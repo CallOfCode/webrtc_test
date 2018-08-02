@@ -1,32 +1,8 @@
 var FetchSigCgi = 'http://localhost:8989/tx/sig';
-var sdkappid,
-    accountType = 32646, // accounttype 还是在文档中会找到
-    userId,
-    userSig,
-    username,
-    isMaster = false;
+var isMaster = false;
 
 
 $("#userId").val("video_" + parseInt(Math.random() * 100000000));
-
-Bom = {
-    /**
-     * @description 读取location.search
-     *
-     * @param {String} n 名称
-     * @return {String} search值
-     * @example
-     * 		$.bom.query('mod');
-     */
-    query: function (n) {
-        var m = window.location.search.match(new RegExp("(\\?|&)" + n + "=([^&]*)(&|$)"));
-        return !m ? "" : decodeURIComponent(m[2]);
-    },
-    getHash: function (n) {
-        var m = window.location.hash.match(new RegExp("(#|&)" + n + "=([^&]*)(&|$)"));
-        return !m ? "" : decodeURIComponent(m[2]);
-    }
-};
 
 function login(closeLocalMedia,ismaster) {
     isMaster = ismaster;
@@ -50,7 +26,7 @@ function login(closeLocalMedia,ismaster) {
             if (json && json.errorCode === 0) {
                 //一会儿进入房间要用到
                 var userSig = json.data.userSig;
-                console.log("userSig:"+userSig);
+                commonUserSig = userSig;
                 var privateMapKey = json.data.privMapEncrypt;
                 // 页面处理，显示视频流页面
                 $("#video-section").show();
@@ -66,6 +42,7 @@ function login(closeLocalMedia,ismaster) {
                     "roomid": $("#roomid").val()
                 });
 
+                imLogin();
             } else {
                 console.error(json);
             }

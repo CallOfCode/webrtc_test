@@ -51,6 +51,9 @@
             </td>
             <td style="width: 15%">
                 聊天信息：
+                <div>
+                    <ul id="video_sms_list"></ul>
+                </div>
             </td>
         </tr>
     </table>
@@ -62,8 +65,16 @@
 <script src="./assets/libs/vconsole.min.js" type="text/javascript"></script>
 
 <script src="https://sqimg.qq.com/expert_qq/webrtc/2.5/WebRTCAPI.min.js"></script>
-<script>
-    document.write('<script src="./video2.js?v='+new Date()+'" type="text/javascript"></scr'+'ipt>')
-</script>
+
+<!--引入webim sdk-->
+<script type="text/javascript" src="./sdk/im/webim.js?v=1"></script>
+<script type="text/javascript" src="./sdk/im/json2.js"></script>
+
+<script type="text/javascript" src="./js/common.js"></script>
+<script type="text/javascript" src="./js/imConvert.js"></script>
+<script type="text/javascript" src="./js/im.js"></script>
+<script type="text/javascript" src="./js/video2.js"></script>
+
+
 </body>
 </html>
